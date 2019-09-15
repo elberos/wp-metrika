@@ -32,10 +32,16 @@ class Info
 	public static function show()
 	{
 		
+		if ( isset($_POST["nonce"]) && (int)wp_verify_nonce($_POST["nonce"], basename(__FILE__)) > 0 )
+		{
+			Cron::load_data();
+		}
+		
+		
 		$time = time();
 		$app_id = get_option( 'elberos_wp_metrika_app_id' );
 		$metrika_id = get_option( 'elberos_wp_metrika_id' );
-		$token_expires_in = get_option( 'elberos_wp_metrika_token_expires_in' );
+		$token_expires_in = (int)get_option( 'elberos_wp_metrika_token_expires_in', 0 );
 		$last_time = (int)get_option( 'elberos_wp_metrika_last_time', 0 );
 		$pageviews = (int)get_option( 'elberos_wp_metrika_pageviews30', 0 );
 		$visits = (int)get_option( 'elberos_wp_metrika_visits30', 0 );
@@ -48,12 +54,17 @@ class Info
 			
 			<?php if ( !$token_exists ) { ?>
 			<div style='padding-bottom: 20px;'>
-				<div id="notice" class="error"><p>Token does not exists</p></div>
+				<div id="notice" class="error"><p>Token does not work. Please check settings</p></div>
+			</div>
+			
+			<?php } else if ( $last_time == 0 ) { ?>
+			<div style='padding-bottom: 20px;'>
+				<div id="message" class="info"><p>Waiting collection data</p></div>
 			</div>
 			
 			<?php } else if ( $token_expires_in > $time ) { ?>
 			<div style='padding-bottom: 20px;'>
-				<div id="message" class="updated"><p>Token exists</p></div>
+				<div id="message" class="updated"><p>Token works correctly</p></div>
 				Your token expire:
 					<b><?php echo date("Y-m-d H:i:s e", $token_expires_in) ?></b>
 			</div>
@@ -67,12 +78,21 @@ class Info
 			<?php } ?>
 			
 			
-			<?php if ( $last_time > 0 ) { ?>
+			<?php if ( $token_exists && $last_time > 0 ) { ?>
 				
 				Last request: <?php echo date("Y-m-d H:i:s e", $last_time) ?><br/>
 				Pageviews: <?php echo esc_html($pageviews) ?><br/>
 				Visits: <?php echo esc_html($visits) ?><br/>
+				<br/>
 				
+			<?php } ?>
+			
+			
+			<?php if ( $token_exists  ) { ?>
+				<form method="POST">
+					<input type="hidden" name="nonce" value="<?php echo wp_create_nonce(basename(__FILE__))?>"/>
+					<button class='button'>Collect last data</button>
+				</form>
 			<?php } ?>
 			
 			
