@@ -26,31 +26,7 @@ if ( !class_exists( Settings::class ) )
 
 class Settings
 {
-	public static function update_key($key, $value)
-	{
-		if (!add_option($key, $value, "", "no"))
-		{
-			update_option($key, $value);
-		}
-	}
-	
-	
-	public static function update_post_key($key, $def_val = "")
-	{
-		$value = isset($_POST[$key]) ? $_POST[$key] : $def_val;
-		static::update_key($key, $value);
-	}
-	
-	
-	public static function load_options($arr)
-	{
-		$item = [];
-		foreach ($arr as $key => $value)
-		{
-			$item[$key] = get_option( $key, $value );
-		}
-		return $item;
-	}
+	use Helper;
 	
 	
 	public static function show()
@@ -200,24 +176,28 @@ class Settings
 		}
 		
 		
+		/* curl request */
 		$curl = curl_init();
-		$otp = [
-			CURLOPT_URL => "https://oauth.yandex.ru/token",
-			CURLOPT_USERAGENT => "Wordpress",
-			CURLOPT_CUSTOMREQUEST => 'POST',
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_POSTFIELDS => 
+		curl_setopt_array(
+			$curl,
 			[
-				"grant_type"=>"authorization_code",
-				"code"=>$oauth_code,
-				"client_id"=>$app_id,
-				"client_secret"=>$app_secret,
-			],
-		];
-		curl_setopt_array($curl, $otp);
+				CURLOPT_URL => "https://oauth.yandex.ru/token",
+				CURLOPT_USERAGENT => "WordPress",
+				CURLOPT_CUSTOMREQUEST => 'POST',
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_POSTFIELDS => 
+				[
+					"grant_type"=>"authorization_code",
+					"code"=>$oauth_code,
+					"client_id"=>$app_id,
+					"client_secret"=>$app_secret,
+				],
+			]
+		);
 		$out = curl_exec($curl);
 		$code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 		curl_close($curl);
+		
 		
 		$response = null;
 		$code = (int)$code;

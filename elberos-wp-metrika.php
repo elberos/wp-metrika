@@ -25,6 +25,7 @@
 if ( !class_exists( 'Elberos_WP_Metrika_Plugin' ) ) 
 {
 
+require_once "include/Helper.php";
 require_once "include/Cron.php";
 
 
@@ -40,7 +41,8 @@ class Elberos_WP_Metrika_Plugin
 			'admin_init', 
 			function()
 			{
-				require_once "pages/settings.php";
+				require_once "pages/Info.php";
+				require_once "pages/Settings.php";
 			}
 		);
 		add_action('admin_menu', 'Elberos_WP_Metrika_Plugin::register_admin_menu');
@@ -48,12 +50,10 @@ class Elberos_WP_Metrika_Plugin
 		
 		
 		// Add Cron
-		/*
 		if ( !wp_next_scheduled( 'elberos_wp_metrika_load_data' ) )
 		{
 			wp_schedule_event( time() + 60, 'elberos_wp_metrika_hour', 'elberos_wp_metrika_load_data' );
 		}
-		*/
 		
 		add_action( 'elberos_wp_metrika_load_data', 'Elberos\WP_Metrika\Cron::load_data' );
 	}
@@ -84,7 +84,7 @@ class Elberos_WP_Metrika_Plugin
 			'manage_options', 'elberos-wp-metrika',
 			function ()
 			{
-				echo "Ok";
+				\Elberos\WP_Metrika\Info::show();
 			},
 			null
 		);		
