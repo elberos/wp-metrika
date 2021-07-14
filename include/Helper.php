@@ -1,9 +1,9 @@
 <?php
 
 /*!
- *  Elberos WP Metrika
+ *  Elberos Facebook Lead Form Connector
  *
- *  (c) Copyright 2019 "Ildar Bikmamatov" <support@elberos.org>
+ *  (c) Copyright 2021 "Ildar Bikmamatov" <support@elberos.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,18 +18,41 @@
  *  limitations under the License.
  */
 
-namespace Elberos\WP_Metrika;
+namespace Elberos\Facebook;
 
-
-trait Helper
+if ( !class_exists( Helper::class ) ) 
 {
+
+class Helper
+{
+	
 	public static function update_key($key, $value)
 	{
-		if (!add_option($key, $value, "", "no"))
+		if ( ! is_multisite() )
 		{
-			update_option($key, $value);
+			if (!add_option($key, $value, "", "no"))
+			{
+				update_option($key, $value);
+			}
+		}
+		else
+		{
+			if (!add_network_option(1, $key, $value, "", "no"))
+			{
+				update_network_option(1, $key, $value);
+			}
 		}
 	}
+	
+	public static function get_key($key, $value)
+	{
+		if ( ! is_multisite() )
+		{
+			return get_option($key, $value);
+		}
+		return get_network_option(1, $key, $value);
+	}
+	
 	
 	public static function update_post_key($key, $def_val = "")
 	{
@@ -47,4 +70,6 @@ trait Helper
 		}
 		return $item;
 	}
+}
+
 }

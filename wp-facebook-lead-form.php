@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Elberos WP Metrika
- * Plugin URI:  https://github.com/elberos/wp-metrika
- * Description: Elberos WP Metrika
+ * Plugin Name: Facebook Lead Form Connector
+ * Plugin URI:  https://github.com/elberos/wp-facebook-lead-form
+ * Description: Facebook Lead Form Connector
  * Version:     1.0
  * Author:      Ildar Bikmamatov <support@elberos.org>
  * Author URI:  https://elberos.org/
@@ -22,14 +22,12 @@
  */
  
  
-if ( !class_exists( 'Elberos_WP_Metrika_Plugin' ) ) 
+if ( !class_exists( 'Elberos_Facebook_Lead_Form_Plugin' ) ) 
 {
 
 require_once "include/Helper.php";
-require_once "include/Cron.php";
 
-
-class Elberos_WP_Metrika_Plugin
+class Elberos_Facebook_Lead_Form_Plugin
 {
 	
 	/**
@@ -41,35 +39,21 @@ class Elberos_WP_Metrika_Plugin
 			'admin_init', 
 			function()
 			{
-				require_once "pages/Info.php";
-				require_once "pages/Settings.php";
+				require_once "admin/Settings.php";
 			}
 		);
-		add_action('admin_menu', 'Elberos_WP_Metrika_Plugin::register_admin_menu');
-		add_filter('cron_schedules', 'Elberos_WP_Metrika_Plugin::cron_schedules');
+		add_action('admin_menu', 'Elberos_Facebook_Lead_Form_Plugin::register_admin_menu');
 		
 		
 		// Add Cron
+		/*
 		if ( !wp_next_scheduled( 'elberos_wp_metrika_load_data' ) )
 		{
-			wp_schedule_event( time() + 60, 'elberos_wp_metrika_hour', 'elberos_wp_metrika_load_data' );
+			wp_schedule_event( time() + 60, 'hourly', 'elberos_wp_metrika_load_data' );
 		}
 		
 		add_action( 'elberos_wp_metrika_load_data', 'Elberos\WP_Metrika\Cron::load_data' );
-	}
-	
-	
-	
-	/**
-	 * Cron schedules
-	 */
-	public static function cron_schedules()
-	{
-		$schedules['elberos_wp_metrika_hour'] = array(
-			'interval' => 3600, // Каждый час
-			'display'  => __( 'Once Hour', 'elberos_wp_metrika' ),
-		);
-		return $schedules;
+		*/
 	}
 	
 	
@@ -80,22 +64,22 @@ class Elberos_WP_Metrika_Plugin
 	public static function register_admin_menu()
 	{
 		add_menu_page(
-			'Yandex Metrika', 'Yandex Metrika',
-			'manage_options', 'elberos-wp-metrika',
+			'Facebook', 'Facebook',
+			'manage_options', 'elberos-facebook',
 			function ()
 			{
-				\Elberos\WP_Metrika\Info::show();
+				echo "Facebook";
 			},
 			null
 		);		
 		
 		add_submenu_page(
-			'elberos-wp-metrika', 
-			'Settings', 'Settings',
-			'manage_options', 'elberos-wp-metrika-settings', 
+			'elberos-facebook', 
+			'Facebook Settings', 'Facebook Settings',
+			'manage_options', 'elberos-facebook-settings', 
 			function()
 			{
-				\Elberos\WP_Metrika\Settings::show();
+				\Elberos\Facebook\Settings::show();
 			}
 		);
 		
@@ -103,6 +87,14 @@ class Elberos_WP_Metrika_Plugin
 	
 }
 
-Elberos_WP_Metrika_Plugin::init();
+Elberos_Facebook_Lead_Form_Plugin::init();
+
+function wp_facebook_lead_form_api_load()
+{
+	if (!class_exists(\Facebook\Facebook::class))
+	{
+		require_once __DIR__ . "/vendor/autoload.php";
+	}
+}
 
 }
