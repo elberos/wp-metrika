@@ -194,18 +194,16 @@ class Elberos_Facebook_Lead_Form_Plugin
 		$leads = $wpdb->get_results($sql, ARRAY_A);
 		foreach ($leads as $row)
 		{
+			$sql = $wpdb->prepare
+			(
+				"UPDATE " . $wpdb->base_prefix . "elberos_facebook_leads SET
+					send_email=1 where id=%d",
+				[ $row['id'] ]
+			);
+			$wpdb->query( $sql );
+			
 			list ($title, $message) = static::getLeadsMail($row);
 			\Elberos\add_email("forms", $email_to, $title, $message);
-			$wpdb->update
-			(
-				$wpdb->base_prefix . "elberos_facebook_leads",
-				[
-					"id" => $row["id"],
-				],
-				[
-					"send_email" => 1,
-				]
-			);
 		}
 	}
 	
