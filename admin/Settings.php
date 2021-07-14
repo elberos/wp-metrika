@@ -18,7 +18,7 @@
  *  limitations under the License.
  */
 
-namespace Elberos\Facebook;
+namespace Elberos\Facebook\Leads;
 
 
 if ( !class_exists( Settings::class ) ) 
@@ -33,15 +33,19 @@ class Settings
 		
 		if ( isset($_POST["nonce"]) && (int)wp_verify_nonce($_POST["nonce"], basename(__FILE__)) > 0 )
 		{
-			Helper::update_post_key("elberos_facebook_app_id");
-			Helper::update_post_key("elberos_facebook_app_secret");
-			Helper::update_post_key("elberos_facebook_access_token");
+			Helper::update_post_key("elberos_facebook_leads_enable");
+			Helper::update_post_key("elberos_facebook_leads_app_id");
+			Helper::update_post_key("elberos_facebook_leads_app_secret");
+			Helper::update_post_key("elberos_facebook_leads_access_token");
+			Helper::update_post_key("elberos_facebook_leads_email_to");
 		}
 		
 		$form_item = Helper::load_options([
-			"elberos_facebook_app_id"=>"",
-			"elberos_facebook_app_secret"=>"",
-			"elberos_facebook_access_token"=>"",
+			"elberos_facebook_leads_enable"=>"",
+			"elberos_facebook_leads_app_id"=>"",
+			"elberos_facebook_leads_app_secret"=>"",
+			"elberos_facebook_leads_access_token"=>"",
+			"elberos_facebook_leads_email_to"=>"",
 		]);
 		
 		$error = [];
@@ -50,15 +54,9 @@ class Settings
 		$loginUrl = "";
 		$accessToken = null;
 		
-		if ($form_item['elberos_facebook_app_id'] != "" && $form_item['elberos_facebook_app_secret'] != "")
+		if ($form_item['elberos_facebook_leads_app_id'] != "" && $form_item['elberos_facebook_leads_app_secret'] != "")
 		{
-			wp_facebook_lead_form_api_load();
-			
-			$fb = new \Facebook\Facebook([
-				'app_id' => $form_item['elberos_facebook_app_id'],
-				'app_secret' => $form_item['elberos_facebook_app_secret'],
-				'default_graph_version' => 'v2.10',
-			]);
+			$fb = wp_facebook_lead_create_instance();
 			
 			$helper = $fb->getRedirectLoginHelper();
 			
@@ -66,7 +64,7 @@ class Settings
 			$redirect_url = site_url("/wp-admin/admin.php?page=elberos-facebook-settings&oauth=true");
 			
 			// Optional permissions https://developers.facebook.com/docs/permissions/reference/
-			$permissions = ['leads_retrieval'];
+			$permissions = ['pages_manage_ads', 'leads_retrieval', 'pages_read_engagement'];
 			
 			// Facebook login url
 			$loginUrl = $helper->getLoginUrl($redirect_url, $permissions);
@@ -77,15 +75,15 @@ class Settings
 				{
 					$accessToken = $helper->getAccessToken();
 				}
-				catch(\Facebook\Exception\ResponseException $e)
+				catch (\Facebook\Exception\ResponseException $e)
 				{
 					$error[] = "Graph returned an error: " . $e->getMessage();
 				}
-				catch(\Facebook\Exception\SDKException $e)
+				catch (\Facebook\Exception\SDKException $e)
 				{
 					$error[] = "Facebook SDK returned an error: " . $e->getMessage();
 				}
-				catch(\Exception $e)
+				catch (\Exception $e)
 				{
 					$error[] = "Fatal Error: " . $e->getMessage();
 				}
@@ -107,8 +105,8 @@ class Settings
 				else
 				{
 					$success[] = "Токен успешно получен";
-					Helper::update_key("elberos_facebook_access_token", (string) $accessToken);
-					$form_item["elberos_facebook_access_token"] = (string) $accessToken;
+					Helper::update_key("elberos_facebook_leads_access_token", (string) $accessToken);
+					$form_item["elberos_facebook_leads_access_token"] = (string) $accessToken;
 				}
 			}
 		}
@@ -134,7 +132,7 @@ class Settings
 			<div style='clear: both;'></div>
 		</div>
 		
-		<?php if ($form_item['elberos_facebook_app_id'] != "" && $form_item['elberos_facebook_app_secret'] != "" &&
+		<?php if ($form_item['elberos_facebook_leads_app_id'] != "" && $form_item['elberos_facebook_leads_app_secret'] != "" &&
 			!isset($_GET['oauth']))
 		{
 			?>
@@ -190,29 +188,53 @@ class Settings
 	public static function display_form($item)
 	{
 		?>
+		<!-- Enable -->
+		<p>
+		    <label for="elberos_facebook_leads_enable"><?php _e('Facebook Enable:', 'elberos-facebook')?></label>
+		<br>
+			<select id="elberos_facebook_leads_enable" name="elberos_facebook_leads_enable"
+				style="width: 100%; max-width: none;"
+			>
+				<option>Select value</option>
+				<option value="yes"
+					<?= \Elberos\is_value_selected($item['elberos_facebook_leads_enable'], "yes") ?>
+				>Yes</option>
+				<option value="no"
+					<?= \Elberos\is_value_selected($item['elberos_facebook_leads_enable'], "no") ?>
+				>No</option>
+			</select>
+		</p>
 		
 		<!-- App ID -->
 		<p>
-		    <label for="elberos_facebook_app_id"><?php _e('Facebook App ID:', 'elberos-facebook')?></label>
+		    <label for="elberos_facebook_leads_app_id"><?php _e('Facebook App ID:', 'elberos-facebook')?></label>
 		<br>
-            <input id="elberos_facebook_app_id" name="elberos_facebook_app_id" type="text" style="width: 100%"
-				value="<?php echo esc_attr($item['elberos_facebook_app_id'])?>" >
+            <input id="elberos_facebook_leads_app_id" name="elberos_facebook_leads_app_id" type="text" style="width: 100%"
+				value="<?php echo esc_attr($item['elberos_facebook_leads_app_id'])?>" >
 		</p>
 		
 		<!-- App Secret -->
 		<p>
-		    <label for="elberos_facebook_app_secret"><?php _e('Facebook App Secret:', 'elberos-facebook')?></label>
+		    <label for="elberos_facebook_leads_app_secret"><?php _e('Facebook App Secret:', 'elberos-facebook')?></label>
 		<br>
-            <input id="elberos_facebook_app_secret" name="elberos_facebook_app_secret" type="text" style="width: 100%"
-				value="<?php echo esc_attr($item['elberos_facebook_app_secret'])?>" >
+            <input id="elberos_facebook_leads_app_secret" name="elberos_facebook_leads_app_secret" type="text" style="width: 100%"
+				value="<?php echo esc_attr($item['elberos_facebook_leads_app_secret'])?>" >
 		</p>
 		
 		<!-- Access token -->
 		<p>
-		    <label for="elberos_facebook_access_token"><?php _e('Access token:', 'elberos-facebook')?></label>
+		    <label for="elberos_facebook_leads_access_token"><?php _e('Access token:', 'elberos-facebook')?></label>
 		<br>
-            <input id="elberos_facebook_access_token" name="elberos_facebook_access_token" type="text" style="width: 100%"
-				value="<?php echo esc_attr($item['elberos_facebook_access_token'])?>" >
+            <input id="elberos_facebook_leads_access_token" name="elberos_facebook_leads_access_token" type="text" style="width: 100%"
+				value="<?php echo esc_attr($item['elberos_facebook_leads_access_token'])?>" >
+		</p>
+		
+		<!-- Email to -->
+		<p>
+		    <label for="elberos_facebook_leads_email_to"><?php _e('Email to:', 'elberos-facebook')?></label>
+		<br>
+            <input id="elberos_facebook_leads_email_to" name="elberos_facebook_leads_email_to" type="text" style="width: 100%"
+				value="<?php echo esc_attr($item['elberos_facebook_leads_email_to'])?>" >
 		</p>
 		
 		<?php

@@ -18,7 +18,7 @@
  *  limitations under the License.
  */
 
-namespace Elberos\Facebook;
+namespace Elberos\Facebook\Leads;
 
 if ( !class_exists( Helper::class ) ) 
 {
