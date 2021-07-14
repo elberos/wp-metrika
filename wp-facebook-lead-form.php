@@ -60,7 +60,7 @@ class Elberos_Facebook_Lead_Form_Plugin
 		// Add Cron
 		if ( !wp_next_scheduled( 'elberos_facebook_load_leads' ) )
 		{
-			wp_schedule_event( time() + 60, 'hourly', 'elberos_facebook_load_leads' );
+			wp_schedule_event( time() + 60, 'elberos_five_minute', 'elberos_facebook_load_leads' );
 		}
 		
 		add_action( 'elberos_facebook_load_leads', 'Elberos_Facebook_Lead_Form_Plugin::load_leads' );
